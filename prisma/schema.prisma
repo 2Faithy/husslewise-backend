@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id                  String    @id @default(cuid())
+  businessName        String
+  fullName            String
+  email               String    @unique
+  passwordHash        String
+  phone               String?
+  address             String?
+  bankName            String?
+  accountNumber       String?
+  accountName         String?
+  businessLogo        String?
+  category            String?
+  businessType        String?
+  state               String?
+  teamSize            String?
+  yearsOperating      String?
+  monthlyRevenueRange String?
+  goals               String[]
+  storefrontSlug      String    @unique
+  storefrontOpen      Boolean   @default(true)
+  offersDelivery Boolean @default(false)
+  onboardingComplete  Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  sales            Sale[]
+  expenses         Expense[]
+  debts            Debt[]
+  inventory        InventoryItem[]
+  staff            Staff[]
+  storefrontOrders StorefrontOrder[]
+
+  emailVerified            Boolean   @default(false)
+  verificationCode         String?
+  verificationCodeExpires  DateTime?
+  resetCode                String?
+  resetCodeExpires         DateTime?
+  about               String?  @db.Text
+  notifyLowStock      Boolean  @default(true)
+  notifyOverdueDebts  Boolean  @default(true)
+  notifyDailySummary  Boolean  @default(false)
+  notifyGrowthTips    Boolean  @default(true)
+  registration BusinessRegistration?
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  amount        Float
+  item          String
+  paymentMethod String
+  category      String
+  groupId String?
+  quantity        Int?
+  discount        Float    @default(0)
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  date          DateTime @default(now())
+  receiptSent   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  debtId String?
+  debt   Debt?   @relation(fields: [debtId], references: [id], onDelete: SetNull)
+
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  type        String
+  description String?
+  recurring   Boolean  @default(false)
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Debt {
+  id           String   @id @default(cuid())
+  customerName String
+  phone        String?
+  item         String
+  amount       Float
+  amountPaid   Float    @default(0)
+  dateGiven    DateTime @default(now())
+  dueDate      DateTime
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+    sales Sale[]
+    quantity        Int?
+    items Json?
+  discount        Float    @default(0)
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model InventoryItem {
+  id                String   @id @default(cuid())
+  name              String
+  quantity          Int
+  unit              String
+  costPrice         Float
+  sellingPrice      Float
+  lowStockThreshold Int      @default(5)
+  createdAt         DateTime @default(now())
+  sales Sale[]
+  debts Debt[]
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Staff {
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  phone              String?
+  role               String    @default("cashier")
+  status             String    @default("pending")
+  passwordHash       String?
+  inviteToken        String?
+  inviteTokenExpires DateTime?
+  dateAdded          DateTime  @default(now())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model StorefrontOrder {
+  id               String   @id @default(cuid())
+  items            Json
+  total            Float
+  customerName     String
+  customerPhone    String
+  deliveryMethod   String
+  deliveryAddress  String?
+  paymentMethod    String   @default("pay_on_pickup")
+  paymentProof     String?  @db.Text
+  paymentConfirmed Boolean  @default(false)
+  deliveryFee      Float?
+  status           String   @default("pending")
+  date             DateTime @default(now())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model BusinessRegistration {
+  id                       String   @id @default(cuid())
+  businessName             String
+  businessType             String
+  ownerFullName            String
+  ownerNIN                 String
+  documentsConfirmed       Boolean  @default(false)
+  paymentProof             String?
+  paymentConfirmed         Boolean  @default(false)
+  status                   String   @default("submitted") // submitted | in_review | filed | approved
+  submittedDate            DateTime @default(now())
+  estimatedCompletionDate  DateTime
+
+  businessId String   @unique
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
