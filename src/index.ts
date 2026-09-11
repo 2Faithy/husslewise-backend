@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 4000;
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://hussle-wise.vercel.app/", 
+  "https://hussle-wise.vercel.app",
 ];
 
 app.use(
