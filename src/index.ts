@@ -18,18 +18,18 @@ import staffAuthRoutes from "./routes/staffAuth";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Allow the frontend's dev + prod origins. Add prod URL once deployed.
 const allowedOrigins = [
-  "http://localhost:5173", // Vite dev server
+  "http://localhost:5173",
+  "https://your-vercel-url-here.vercel.app", 
 ];
 
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true, // needed once we move to httpOnly cookie JWTs
+    credentials: true, 
   })
 );
-app.use(express.json({ limit: "10mb" })); // payment proof images are sent as base64
+app.use(express.json({ limit: "10mb" })); 
 app.use("/api/auth", authRoutes);
 app.use("/api/business-profile", businessProfileRoutes);
 app.use("/api/sales", salesRoutes);
