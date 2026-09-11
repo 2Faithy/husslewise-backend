@@ -13,6 +13,10 @@ export function generateVerificationCode(): string {
 }
 
 export async function sendVerificationEmail(to: string, code: string) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD environment variable is missing.");
+  }
+
   await transporter.sendMail({
     from: `"Husslewise" <${process.env.GMAIL_USER}>`,
     to,
@@ -29,6 +33,10 @@ export async function sendVerificationEmail(to: string, code: string) {
 }
 
 export async function sendPasswordResetEmail(to: string, code: string) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD environment variable is missing.");
+  }
+
   await transporter.sendMail({
     from: `"Husslewise" <${process.env.GMAIL_USER}>`,
     to,
@@ -51,6 +59,8 @@ export async function sendNewOrderEmail(
   total: number,
   hasProof: boolean
 ) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+
   await transporter.sendMail({
     from: `"Husslewise" <${process.env.GMAIL_USER}>`,
     to,
@@ -72,6 +82,8 @@ export async function sendRegistrationReceivedEmail(
   businessName: string,
   ownerFullName: string
 ) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+
   await transporter.sendMail({
     from: `"Husslewise" <${process.env.GMAIL_USER}>`,
     to,
@@ -95,6 +107,8 @@ export async function sendRegistrationReceivedEmail(
 }
 
 export async function sendStaffInviteEmail(to: string, staffName: string, businessName: string, inviteLink: string) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+
   await transporter.sendMail({
     from: `"Husslewise" <${process.env.GMAIL_USER}>`,
     to,

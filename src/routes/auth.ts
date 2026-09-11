@@ -43,7 +43,17 @@ router.post("/signup", async (req, res) => {
       },
     });
 
-    await sendVerificationEmail(email, code);
+    try {
+      await sendVerificationEmail(email, code);
+    } catch (emailErr) {
+      console.error("Failed to send signup verification email:", emailErr);
+      return res.status(201).json({
+        message: "Account created, but failed to send verification email. Please click 'Resend code'.",
+        businessId: business.id,
+        email: business.email,
+        emailError: true,
+      });
+    }
 
     res.status(201).json({
       message: "Account created. Check your email for a verification code.",
@@ -99,6 +109,10 @@ router.post("/verify-email", async (req, res) => {
 router.post("/resend-verification", async (req, res) => {
   try {
     const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email address is required." });
+    }
+
     const business = await prisma.business.findUnique({ where: { email } });
 
     if (!business) {
@@ -116,7 +130,15 @@ router.post("/resend-verification", async (req, res) => {
       data: { verificationCode: code, verificationCodeExpires: expires },
     });
 
-    await sendVerificationEmail(email, code);
+    try {
+      await sendVerificationEmail(email, code);
+    } catch (emailErr) {
+      console.error("Resend verification email failed:", emailErr);
+      return res.status(500).json({
+        error: "Could not send verification email. Please ensure server email credentials are configured.",
+      });
+    }
+
     res.json({ message: "A new code has been sent." });
   } catch (err) {
     console.error("Resend verification error:", err);
@@ -161,7 +183,6 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Not a business owner — check if this is a staff login using findFirst (or findUnique if email is @unique)
     const staff = await prisma.staff.findFirst({ where: { email } });
     if (!staff) {
       return res.status(401).json({ error: "Invalid email or password." });
@@ -195,7 +216,7 @@ router.post("/login", async (req, res) => {
         businessName: business2?.businessName || "",
         fullName: staff.name,
         email: staff.email,
-        onboardingComplete: true, // staff never go through onboarding
+        onboardingComplete: true,
       },
     });
   } catch (err) {
@@ -256,7 +277,11 @@ router.post("/forgot-password", async (req, res) => {
       data: { resetCode: code, resetCodeExpires: expires },
     });
 
-    await sendPasswordResetEmail(email, code);
+    try {
+      await sendPasswordResetEmail(email, code);
+    } catch (emailErr) {
+      console.error("Forgot password email failed:", emailErr);
+    }
 
     res.json({ message: "If an account exists for this email, a reset code has been sent." });
   } catch (err) {
